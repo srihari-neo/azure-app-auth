@@ -19,7 +19,46 @@ jobs:
         with:
           submodules: true
           lfs: false
-      - name: Build And Deploy
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Debug Environment
+        run: |
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "MONGODB_URI is set: ${{ secrets.MONGODB_URI != '' }}"
+          echo "Current working directory: $(pwd)"
+          echo "Repository contents:"
+          ls -la
+          echo "Package.json exists: $(test -f package.json && echo 'Yes' || echo 'No')"
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Debug before build
+        run: |
+          echo "About to run build with MONGODB_URI available"
+          echo "Build command that will run: npm run build"
+      
+      - name: Build application
+        run: npm run build
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      
+      - name: Debug after build
+        run: |
+          echo "Build completed, checking output:"
+          ls -la
+          echo "Dist directory contents:"
+          ls -la dist/ || echo "No dist directory found"
+          echo "Next directory contents:"
+          ls -la .next/ || echo "No .next directory found"
+      
+      - name: Deploy to Azure Static Web Apps
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -29,6 +68,7 @@ jobs:
           app_location: "/"
           api_location: "/api"
           output_location: "dist"
+          skip_app_build: true
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
 
