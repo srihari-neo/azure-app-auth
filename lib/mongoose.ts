@@ -47,7 +47,7 @@ async function connectToDatabase() {
       console.log('✅ Successfully connected to MongoDB via Mongoose');
       return mongoose;
     }).catch((error) => {
-      console.error('❌ Failed to connect to MongoDB:', error.message);
+      console.error('Failed to connect to MongoDB:', error.message);
       cached.promise = null;
       throw error;
     });
