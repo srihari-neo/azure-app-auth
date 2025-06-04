@@ -31,32 +31,21 @@ jobs:
           echo "Node version: $(node --version)"
           echo "NPM version: $(npm --version)"
           echo "MONGODB_URI is set: ${{ secrets.MONGODB_URI != '' }}"
-          echo "Current working directory: $(pwd)"
-          echo "Repository contents:"
-          ls -la
-          echo "Package.json exists: $(test -f package.json && echo 'Yes' || echo 'No')"
+          echo "Repository structure:"
+          find . -type f -name "*.js" -o -name "*.ts" -o -name "*.json" | head -20
       
       - name: Install dependencies
         run: npm ci
       
-      - name: Debug before build
-        run: |
-          echo "About to run build with MONGODB_URI available"
-          echo "Build command that will run: npm run build"
-      
       - name: Build application
         run: npm run build
-        env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
       
-      - name: Debug after build
+      - name: Debug build output
         run: |
           echo "Build completed, checking output:"
-          ls -la
-          echo "Dist directory contents:"
           ls -la dist/ || echo "No dist directory found"
-          echo "Next directory contents:"
-          ls -la .next/ || echo "No .next directory found"
+          echo "API directory structure:"
+          ls -la api/ || echo "No api directory found"
       
       - name: Deploy to Azure Static Web Apps
         id: builddeploy
@@ -66,11 +55,9 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "/"
-          api_location: "/api"
+          api_location: "/api"  # Azure Functions will be here
           output_location: "dist"
           skip_app_build: true
-        env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
