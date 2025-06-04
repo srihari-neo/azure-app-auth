@@ -294,7 +294,6 @@ export default function Home() {
           )}
         </div>
       </main>
-
       {/* Footer */}
       <footer className="relative z-10 p-6">
         <div className="max-w-7xl mx-auto text-center">
