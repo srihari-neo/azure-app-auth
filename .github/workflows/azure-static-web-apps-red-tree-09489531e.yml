@@ -19,45 +19,21 @@ jobs:
         with:
           submodules: true
           lfs: false
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - name: Debug Environment
-        run: |
-          echo "Node version: $(node --version)"
-          echo "NPM version: $(npm --version)"
-          echo "MONGODB_URI is set: ${{ secrets.MONGODB_URI != '' }}"
-          echo "Repository structure:"
-          find . -type f -name "*.js" -o -name "*.ts" -o -name "*.json" | head -20
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Build application
-        run: npm run build
-      
-      - name: Debug build output
-        run: |
-          echo "Build completed, checking output:"
-          ls -la dist/ || echo "No dist directory found"
-          echo "API directory structure:"
-          ls -la api/ || echo "No api directory found"
-      
-      - name: Deploy to Azure Static Web Apps
+      - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_RED_TREE_09489531E }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
           action: "upload"
-          app_location: "/"
-          api_location: "/api"  # Azure Functions will be here
-          output_location: "dist"
-          skip_app_build: true
+          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
+          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
+          app_location: "/" # App source code path
+          api_location: "/api" # Api source code path - optional
+          output_location: "dist" # Built app content directory - optional
+          ###### End of Repository/Build Configurations ######
+        env: 
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
