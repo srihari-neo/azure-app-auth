@@ -8,7 +8,6 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
-  
 
 jobs:
   build_and_deploy_job:
@@ -17,7 +16,6 @@ jobs:
     name: Build and Deploy Job
     steps:
       - uses: actions/checkout@v3
-      
         with:
           submodules: true
           lfs: false
@@ -33,8 +31,6 @@ jobs:
           app_location: "/" # App source code path
           api_location: "/api" # Api source code path - optional
           output_location: "dist" # Built app content directory - optional
-         
-
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
