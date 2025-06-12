@@ -11,7 +11,11 @@ interface UploadResponse {
   error?: string;
 }
 
-const FileUploadComponent: React.FC = () => {
+interface FileUploadComponentProps {
+  onUploadSuccess: () => void;
+}
+
+const FileUploadComponent: React.FC<FileUploadComponentProps> = ({ onUploadSuccess }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>('');
   const [originalFileName, setOriginalFileName] = useState<string>('');
@@ -125,6 +129,8 @@ const FileUploadComponent: React.FC = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+
+    onUploadSuccess();
   };
 
   const formatFileSize = (bytes: number): string => {
