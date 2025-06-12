@@ -5,6 +5,12 @@
       "methods": [
         "post"
       ]
+    },
+    {
+      "route": "/api/storage",
+      "methods": [
+        "get"
+      ]
     }
   ]
 }
