@@ -11,6 +11,12 @@
       "methods": [
         "get"
       ]
+    },
+    {
+      "route": "/api/auth",
+      "methods": [
+        "post"
+      ]
     }
   ]
 }
