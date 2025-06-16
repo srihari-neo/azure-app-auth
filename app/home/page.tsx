@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FileUploadComponent from './FileUpload';
+import Image from 'next/image';
 
 interface FileItem {
   name: string;
@@ -11,17 +12,26 @@ interface FileItem {
   lastModified?: Date;
 }
 
+interface Meme {
+  title: string;
+  url: string;
+  source: string;
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState('');
   const [currentTime, setCurrentTime] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showMemeModal, setShowMemeModal] = useState(false);
   const [files, setFiles] = useState<FileItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentMeme, setCurrentMeme] = useState<Meme | null>(null);
+  const [isMemeLoading, setIsMemeLoading] = useState(false);
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    const email = localStorage.getItem('userEmail');
+    const isLoggedIn = localStorage?.getItem('isLoggedIn');
+    const email = localStorage?.getItem('userEmail');
     console.log("Is logged in: ", isLoggedIn);
 
     if (!isLoggedIn) {
@@ -67,9 +77,47 @@ export default function HomePage() {
     }
   };
 
+  const fetchMeme = async () => {
+    setIsMemeLoading(true);
+    console.log('Fetching meme from API...');
+    try {
+      const response = await fetch('https://python-azure-epcnbxd9e0dce7bf.canadacentral-01.azurewebsites.net/meme');
+      console.log('Fetching meme from API:', response);
+      if (response.ok) {
+        const meme = await response.json();
+        setCurrentMeme(meme);
+      } else {
+        console.error('Failed to fetch meme');
+        setCurrentMeme({
+          title: 'Oops! Meme service is taking a break',
+          url: '',
+          source: 'Error'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching meme:', error);
+      setCurrentMeme({
+        title: 'Connection failed - but you still deserve a laugh! 😄',
+        url: '',
+        source: 'Error'
+      });
+    } finally {
+      setIsMemeLoading(false);
+    }
+  };
+
+  const handleMakeMeLaugh = async () => {
+    setShowMemeModal(true);
+    await fetchMeme();
+  };
+
+  const handleNewMeme = async () => {
+    await fetchMeme();
+  };
+
   const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userEmail');
+    localStorage?.removeItem('isLoggedIn');
+    localStorage?.removeItem('userEmail');
     router.push('/');
   };
 
@@ -189,32 +237,55 @@ export default function HomePage() {
                 Manage and organize your uploaded files
               </p>
             </div>
-            <button
-              onClick={() => setShowUploadModal(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '12px 24px',
-                background: 'linear-gradient(to right, #3b82f6, #9333ea)',
-                border: 'none',
-                borderRadius: '12px',
-                color: '#fff',
-                fontWeight: '600',
-                fontSize: '16px',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-              }}
-            >
-              <svg
-                style={{ width: '20px', height: '20px', fill: 'none', stroke: 'currentColor' }}
-                viewBox="0 0 24 24"
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={handleMakeMeLaugh}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: 'linear-gradient(to right, #f59e0b, #f97316)',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                }}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Upload File
-            </button>
+                <span style={{ fontSize: '18px' }}>😂</span>
+                Make Me Laugh
+              </button>
+              <button
+                onClick={() => setShowUploadModal(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 24px',
+                  background: 'linear-gradient(to right, #3b82f6, #9333ea)',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <svg
+                  style={{ width: '20px', height: '20px', fill: 'none', stroke: 'currentColor' }}
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Upload File
+              </button>
+            </div>
           </div>
 
           {/* Files List */}
@@ -400,6 +471,188 @@ export default function HomePage() {
             </div>
             
             <FileUploadComponent onUploadSuccess={handleFileUpload} />
+          </div>
+        </div>
+      )}
+
+      {/* Meme Modal */}
+      {showMemeModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '16px'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowMemeModal(false);
+            }
+          }}
+        >
+          <div
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '24px',
+              padding: '32px',
+              maxWidth: '800px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#fff', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '32px' }}>😂</span>
+                Time to Laugh!
+              </h2>
+              <button
+                onClick={() => setShowMemeModal(false)}
+                style={{
+                  padding: '8px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  cursor: 'pointer'
+                }}
+              >
+                <svg
+                  style={{ width: '20px', height: '20px' }}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {isMemeLoading ? (
+              <div style={{ textAlign: 'center', padding: '48px' }}>
+                <div style={{ display: 'inline-block', width: '48px', height: '48px', border: '4px solid rgba(255, 255, 255, 0.3)', borderRadius: '50%', borderTopColor: '#f59e0b', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginTop: '24px', fontSize: '18px' }}>
+                  Finding something hilarious for you...
+                </p>
+              </div>
+            ) : currentMeme ? (
+              <div style={{ textAlign: 'center' }}>
+                {currentMeme.url ? (
+                  <div style={{ marginBottom: '24px' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <Image
+                      src={currentMeme.url}
+                      alt={currentMeme.title}
+                      width={600}
+                      height={400}
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '400px',
+                        borderRadius: '16px',
+                        objectFit: 'contain'
+                      }}
+                      unoptimized={true}
+                    />
+                  </div>
+                ) : (
+                  <div style={{ 
+                    padding: '48px', 
+                    background: 'rgba(255, 255, 255, 0.05)', 
+                    borderRadius: '16px', 
+                    marginBottom: '24px',
+                    border: '2px dashed rgba(255, 255, 255, 0.2)'
+                  }}>
+                    <span style={{ fontSize: '64px', display: 'block', marginBottom: '16px' }}>🤔</span>
+                    <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '16px' }}>
+                      Meme couldn&apos;t load, but here&apos;s a joke:<br/>
+                      <em>&quot;Why don&apos;t scientists trust atoms? Because they make up everything!&quot;</em>
+                    </p>
+                  </div>
+                )}
+                
+                <h3 style={{ 
+                  color: '#fff', 
+                  fontSize: '20px', 
+                  marginBottom: '16px',
+                  fontWeight: '600'
+                }}>
+                  {currentMeme.title}
+                </h3>
+                
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  gap: '12px',
+                  flexWrap: 'wrap'
+                }}>
+                  <button
+                    onClick={handleNewMeme}
+                    disabled={isMemeLoading}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '12px 24px',
+                      background: 'linear-gradient(to right, #10b981, #059669)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      color: '#fff',
+                      fontWeight: '600',
+                      fontSize: '16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      opacity: isMemeLoading ? 0.5 : 1
+                    }}
+                  >
+                    <svg
+                      style={{ width: '20px', height: '20px' }}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Another One!
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowMemeModal(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '12px 24px',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '12px',
+                      color: '#fff',
+                      fontWeight: '600',
+                      fontSize: '16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <span style={{ fontSize: '16px' }}>😊</span>
+                    Thanks for the Laugh
+                  </button>
+                </div>
+                
+                <p style={{ 
+                  color: 'rgba(255, 255, 255, 0.5)', 
+                  fontSize: '12px', 
+                  marginTop: '16px' 
+                }}>
+                  Powered by {currentMeme.source}
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
       )}
